@@ -5,6 +5,7 @@ const products = [
 ];
 
 const cart = [];
+let promoCodeApplied = false;
 
 const productContainer = document.getElementById('products');
 const cartContainer = document.getElementById('cart-items');
@@ -62,6 +63,7 @@ const updateCart = () => {
 
     cartCount.textContent = cart.length;
     cartTotal.textContent = total.toFixed(2);
+    displayFinalTotal(total); // Update the final total
     console.log(cart); // Debug: log cart contents
 };
 
@@ -87,9 +89,58 @@ const removeFromCart = (productId) => {
 const clearCart = () => {
     cart.length = 0;
     updateCart();
+    promoCodeApplied = false; // Allow promo code to be applied again
+    displayDiscount(0);
+    displayMessage("");
 };
+
+const promoCodes = {
+    ostad10: 0.10,
+    ostad5: 0.05,
+};
+
+function getSubtotal() {
+    return cart.reduce((total, { product, quantity }) => total + product.price * quantity, 0);
+}
+
+function applyPromoCode() {
+    if (promoCodeApplied) {
+        displayMessage("Promo code has already been applied.");
+        return;
+    }
+
+    const promoCodeInput = document.getElementById("promo-code").value;
+    const discount = promoCodes[promoCodeInput];
+
+    if (discount) {
+        const subtotal = getSubtotal();
+        const discountAmount = subtotal * discount;
+        const finalTotal = subtotal - discountAmount;
+
+        displayDiscount(discountAmount);
+        displayFinalTotal(finalTotal);
+        displayMessage("Promo code applied successfully!");
+        promoCodeApplied = true;
+    } else {
+        displayMessage("Invalid promo code. Please try again.");
+    }
+}
+
+function displayDiscount(amount) {
+    document.getElementById("discount-amount").textContent = `Discount: $${amount.toFixed(2)}`;
+}
+
+function displayFinalTotal(amount) {
+    document.getElementById("final-total").textContent = `Total: $${amount.toFixed(2)}`;
+    document.getElementById("subtotal").textContent = `Subtotal: $${getSubtotal().toFixed(2)}`;
+}
+
+function displayMessage(message) {
+    document.getElementById("promo-code-message").textContent = message;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     displayProducts();
     clearCartButton.addEventListener('click', clearCart);
+    document.getElementById('apply-promo-code-button').addEventListener('click', applyPromoCode);
 });
